@@ -1,9 +1,12 @@
 package com.example.notasreact.servicio;
 
+import com.example.notasreact.modelo.Estudiante;
 import com.example.notasreact.modelo.Materia;
 import com.example.notasreact.repositorio.MateriaRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -11,6 +14,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class MateriaServicio {
     private final MateriaRepositorio materiaRepository;
+    private final NotaServicio notaServicio;
 
     public Flux<Materia> ListarMaterias() {
         return materiaRepository.findAll();
@@ -33,4 +37,8 @@ public class MateriaServicio {
         return materiaRepository.deleteById(id);
     }
 
+    @GetMapping("/{materiaId}/estudiantes")
+    public Flux<Estudiante> listarEstudiantesPorMateria(@PathVariable Long materiaId) {
+        return notaServicio.listarEstudiantesPorMateria(materiaId);
+    }
 }
