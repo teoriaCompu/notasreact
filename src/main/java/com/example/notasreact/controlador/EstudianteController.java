@@ -28,12 +28,12 @@ public class EstudianteController {
         return servicio.crear(estudiante);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("actualizar/{id}")
     public Mono<Estudiante> actualizar(@PathVariable Long id, @RequestBody Estudiante estudiante) {
         return servicio.actualizar(id, estudiante);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("eliminar/{id}")
     public Mono<Void> eliminar(@PathVariable Long id) {
         return servicio.eliminar(id);
     }

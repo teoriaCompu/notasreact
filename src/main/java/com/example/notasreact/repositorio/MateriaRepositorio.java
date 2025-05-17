@@ -2,6 +2,7 @@ package com.example.notasreact.repositorio;
 
 import com.example.notasreact.modelo.Materia;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-public interface MateriaRepositorio extends R2dbcRepository<Materia, Long> {
+public interface MateriaRepositorio extends ReactiveCrudRepository<Materia, Long> {
 }

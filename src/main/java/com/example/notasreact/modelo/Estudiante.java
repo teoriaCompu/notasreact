@@ -16,10 +16,8 @@ import java.util.List;
 public class Estudiante {
 
 @Id
-private String id;
+private long id;
 private String nombre;
 private  String apellido;
 private String correo;
-
-
 }
