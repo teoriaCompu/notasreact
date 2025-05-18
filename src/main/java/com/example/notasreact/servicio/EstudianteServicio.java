@@ -34,6 +34,9 @@ public class EstudianteServicio {
     public Mono<Void> eliminar(Long id) {
         return estudianteRepository.deleteById(id);
     }
+    public Mono<Boolean> existePorCorreo(String correo){
+        return estudianteRepository.findByCorreo(correo).hasElement(); //Cambio de Angy :)
+    }
 
 
 
