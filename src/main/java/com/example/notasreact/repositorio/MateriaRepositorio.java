@@ -6,5 +6,5 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
 public interface MateriaRepositorio extends ReactiveCrudRepository<Materia, Long> {
-  Mono<Materia> findByNombre(String nombre);
+
 }

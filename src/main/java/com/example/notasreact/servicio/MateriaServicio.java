@@ -42,8 +42,5 @@ public class MateriaServicio {
         return notaServicio.listarEstudiantesPorMateria(materiaId);
     }
 
-    public Mono<Boolean> existePorNombre(String nombre) {
-        return materiaRepository.findByNombre(nombre)
-                .hasElement();
-    } //Cambio Por Angy :)  
+
 }
