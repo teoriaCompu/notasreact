@@ -5,6 +5,6 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 
 public interface EstudianteRepositorio extends ReactiveCrudRepository<Estudiante, Long> {
-  Mono<Estudiante> findByCorreo(String correo); //Cambio de Angy :)
+  Mono<Estudiante> findByCorreo(String correo); //Cambio de Angy :) (Este es el metodo para la validacion)
 
 }
