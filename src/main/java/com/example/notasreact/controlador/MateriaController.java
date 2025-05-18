@@ -4,6 +4,7 @@ import com.example.notasreact.modelo.Estudiante;
 import com.example.notasreact.modelo.Materia;
 import com.example.notasreact.servicio.MateriaServicio;
 import com.example.notasreact.servicio.NotaServicio;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,64 +21,32 @@ public class MateriaController {
         this.materiaServicio = materiaServicio;
         this.notaServicio = notaServicio;
     }
-@GetMapping
-public Flux<Materia> listarMaterias() {
-    return materiaServicio.ListarMaterias();
-}
 
-@PostMapping
-public Mono<ResponseEntity<Materia>> crear(@RequestBody Materia materia) {
-        if (materia.getNombre() == null || materia.getNombre().trim().isEmpty()) {
-            return Mono.just(ResponseEntity.badRequest().build());
-        }
+    @GetMapping
+    public Flux<Materia> listarMaterias() {
+        return materiaServicio.ListarMaterias();
+    }
 
-        return materiaServicio.existePorNombre(materia.getNombre())
-                .flatMap(existe -> {
-                    if (existe) {
-                        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build());
-                    }
-                    return materiaServicio.crear(materia)
-                            .map(ResponseEntity::ok);
-                })
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-    } //Cambio por Angy :)
+    @PostMapping
+    public Mono<Materia> crear(@RequestBody Materia materia) {
+        return materiaServicio.crear(materia);
+    }
 
-@PutMapping("actualizar/{id}")
-public Mono<ResponseEntity<Materia>> actualizar(@PathVariable Long id, @RequestBody Materia nuevaMateria) {
-        if (nuevaMateria.getNombre() == null || nuevaMateria.getNombre().trim().isEmpty()) {
-            return Mono.just(ResponseEntity.badRequest().build());
-        }
-
-        return materiaServicio.existePorNombre(nuevaMateria.getNombre())
-                .flatMap(existe -> {
-                    if (existe) {
-                        return materiaServicio.findById(id)
-                                .flatMap(materiaExistente -> {
-                                    if (materiaExistente.getNombre().equals(nuevaMateria.getNombre())) {
-                                        return materiaServicio.actualizar(id, nuevaMateria)
-                                                .map(ResponseEntity::ok);
-                                    } else {
-                                        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build());
-                                    }
-                                })
-                                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
-                    } else {
-                        return materiaServicio.actualizar(id, nuevaMateria)
-                                .map(ResponseEntity::ok);
-                    }
-                })
+    @PutMapping("/actualizar/{id}")
+    public Mono<ResponseEntity<Materia>> actualizar(@PathVariable Long id, @RequestBody Materia materia) {
+        return materiaServicio.actualizar(id, materia)
+                .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
-    } //Cambio por Angy :)
-    
-@DeleteMapping("eliminar/{id}")
-public Mono<Void> eliminar(@PathVariable Long id) {
-    return materiaServicio.eliminar(id);
-}
+    }
+
+    @DeleteMapping("/eliminar/{id}")
+    public Mono<Void> eliminar(@PathVariable Long id) {
+        return materiaServicio.eliminar(id);
+    }
 
     @GetMapping("/{materiaId}/estudiantes")
     public Flux<Estudiante> listarEstudiantesPorMateria(@PathVariable Long materiaId) {
         return notaServicio.listarEstudiantesPorMateria(materiaId);
     }
-
 
 }
