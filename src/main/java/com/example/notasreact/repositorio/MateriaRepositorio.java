@@ -5,4 +5,5 @@ import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 public interface MateriaRepositorio extends ReactiveCrudRepository<Materia, Long> {
+  Mono<Materia> findByNombre(String nombre);
 }
