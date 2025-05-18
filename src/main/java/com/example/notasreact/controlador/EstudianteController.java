@@ -17,7 +17,6 @@ public class EstudianteController {
     private final EstudianteServicio estudianteServicio;
     private final NotaServicio notaServicio;
 
-
     public EstudianteController(EstudianteServicio estudianteServicio, NotaServicio notaServicio) {
         this.estudianteServicio = estudianteServicio;
         this.notaServicio = notaServicio;
@@ -29,51 +28,21 @@ public class EstudianteController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<Estudiante>> crear(@RequestBody Estudiante estudiante) {
-        if (estudiante.getCorreo() == null || estudiante.getCorreo().trim().isEmpty()){
-            return Mono.just(ResponseEntity.badRequest().build());
-        }
-        return estudianteServicio.existePorCorreo(estudiante.getCorreo()).flatMap(existe -> {
-            if (existe){
-                return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT)).build());
-            }
-            return estudianteServicio.crear(estudiante).map(ResponseEntity::ok);        
-        })
-            .defaultIfempty(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-    } //Cambio Por Angy :)
+    public Mono<Estudiante> crear(@RequestBody Estudiante estudiante) {
+        return estudianteServicio.crear(estudiante);
+    }
 
     @PutMapping("/actualizar/{id}")
-    public Mono<ResponseEntity<Estudiante>> actualizar(@PathVariable Long id, @RequestBody Estudiante nuevoEstudiante) {
-        if (nuevoEstudiante.getCorreo() == null || nuevoEstudiante.getCorreo().trim().isEmpty()) {
-            return Mono.just(ResponseEntity.badRequest().build());
-        }
-
-        return estudianteServicio.existePorCorreo(nuevoEstudiante.getCorreo())
-                .flatMap(existe -> {
-                    if (existe) {
-                        return estudianteServicio.findById(id)  //  Verificar si el correo ya existe para otro estudiante
-                                .flatMap(estudianteExistente -> {
-                                    if (estudianteExistente.getCorreo().equals(nuevoEstudiante.getCorreo())) {
-                                        return estudianteServicio.actualizar(id, nuevoEstudiante)
-                                                .map(ResponseEntity::ok); //  Mismo correo, se actualiza
-                                    } else {
-                                        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build()); //  Correo duplicado
-                                    }
-                                })
-                                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));  //  Estudiante no encontrado
-                    } else {
-                        return estudianteServicio.actualizar(id, nuevoEstudiante)
-                                .map(ResponseEntity::ok); //  Correo único, se actualiza
-                    }
-                })
+    public Mono<ResponseEntity<Estudiante>> actualizar(@PathVariable Long id, @RequestBody Estudiante estudiante) {
+        return estudianteServicio.actualizar(id, estudiante)
+                .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
-    } //Cambio por Angy :)
-
+    }
 
     @DeleteMapping("/eliminar/{id}")
     public Mono<Void> eliminar(@PathVariable Long id) {
         return estudianteServicio.eliminar(id);
-    } 
+    }
 
     @PostMapping("/materias/{materiaId}/estudiantes")
     public Mono<ResponseEntity<String>> agregarEstudianteAMateria(
@@ -81,7 +50,7 @@ public class EstudianteController {
             @RequestBody Estudiante estudiante) {
 
         // Validación básica
-        if(estudiante.getNombre() == null || estudiante.getNombre().trim().isEmpty()) {
+        if (estudiante.getNombre() == null || estudiante.getNombre().trim().isEmpty()) {
             return Mono.just(ResponseEntity.badRequest().body("Nombre es requerido"));
         }
 
@@ -101,5 +70,3 @@ public class EstudianteController {
                         ResponseEntity.status(500).body("Error: " + e.getMessage())
                 ));
     }
-
-}
