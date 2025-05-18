@@ -41,4 +41,9 @@ public class MateriaServicio {
     public Flux<Estudiante> listarEstudiantesPorMateria(@PathVariable Long materiaId) {
         return notaServicio.listarEstudiantesPorMateria(materiaId);
     }
+
+    public Mono<Boolean> existePorNombre(String nombre) {
+        return materiaRepository.findByNombre(nombre)
+                .hasElement();
+    } //Cambio Por Angy :)  
 }
