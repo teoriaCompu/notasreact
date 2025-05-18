@@ -26,15 +26,49 @@ public Flux<Materia> listarMaterias() {
 }
 
 @PostMapping
-    public Mono<Materia> crear(@RequestBody Materia materia) {
-    return materiaServicio.crear(materia);
-}
+public Mono<ResponseEntity<Materia>> crear(@RequestBody Materia materia) {
+        if (materia.getNombre() == null || materia.getNombre().trim().isEmpty()) {
+            return Mono.just(ResponseEntity.badRequest().build());
+        }
+
+        return materiaServicio.existePorNombre(materia.getNombre())
+                .flatMap(existe -> {
+                    if (existe) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build());
+                    }
+                    return materiaServicio.crear(materia)
+                            .map(ResponseEntity::ok);
+                })
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+    } //Cambio por Angy :)
 
 @PutMapping("actualizar/{id}")
-public Mono<Materia> actualizar(@PathVariable Long id, @RequestBody Materia materia) {
-    return materiaServicio.actualizar(id, materia);
-}
+public Mono<ResponseEntity<Materia>> actualizar(@PathVariable Long id, @RequestBody Materia nuevaMateria) {
+        if (nuevaMateria.getNombre() == null || nuevaMateria.getNombre().trim().isEmpty()) {
+            return Mono.just(ResponseEntity.badRequest().build());
+        }
 
+        return materiaServicio.existePorNombre(nuevaMateria.getNombre())
+                .flatMap(existe -> {
+                    if (existe) {
+                        return materiaServicio.findById(id)
+                                .flatMap(materiaExistente -> {
+                                    if (materiaExistente.getNombre().equals(nuevaMateria.getNombre())) {
+                                        return materiaServicio.actualizar(id, nuevaMateria)
+                                                .map(ResponseEntity::ok);
+                                    } else {
+                                        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).build());
+                                    }
+                                })
+                                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+                    } else {
+                        return materiaServicio.actualizar(id, nuevaMateria)
+                                .map(ResponseEntity::ok);
+                    }
+                })
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    } //Cambio por Angy :)
+    
 @DeleteMapping("eliminar/{id}")
 public Mono<Void> eliminar(@PathVariable Long id) {
     return materiaServicio.eliminar(id);
