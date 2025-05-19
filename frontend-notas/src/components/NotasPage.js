@@ -6,7 +6,7 @@ function NotasPage() {
     const [notas, setNotas] = useState([]);
     const [materia, setMateria] = useState(null);
     const [estudiante, setEstudiante] = useState(null);
-    const [form, setForm] = useState({ valor: 0, porcentaje: 0, observacion: '' });
+    const [form, setForm] = useState({ id: null, valor: 0, porcentaje: 0, observacion: '' });
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState({
         notas: false,
@@ -17,13 +17,11 @@ function NotasPage() {
     const fetchDatos = async () => {
         setLoading(prev => ({ ...prev, datos: true }));
         try {
-            // Obtener datos de la materia
             const resMateria = await fetch(`http://localhost:8080/materias/${materiaId}`);
             if (!resMateria.ok) throw new Error('Error al obtener datos de la materia');
             const dataMateria = await resMateria.json();
             setMateria(dataMateria);
 
-            // Obtener datos del estudiante
             const resEstudiante = await fetch(`http://localhost:8080/estudiantes/${estudianteId}`);
             if (!resEstudiante.ok) throw new Error('Error al obtener datos del estudiante');
             const dataEstudiante = await resEstudiante.json();
@@ -40,9 +38,7 @@ function NotasPage() {
         setLoading(prev => ({ ...prev, notas: true }));
         try {
             const response = await fetch(`http://localhost:8080/notas?materiaId=${materiaId}&estudianteId=${estudianteId}`);
-            if (!response.ok) {
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
             const data = await response.json();
             setNotas(data);
             setError(null);
@@ -63,7 +59,6 @@ function NotasPage() {
         e.preventDefault();
         setLoading(prev => ({ ...prev, operacion: true }));
 
-        // Validación básica
         if (form.valor < 0 || form.valor > 5) {
             setError("La nota debe estar entre 0 y 5");
             setLoading(prev => ({ ...prev, operacion: false }));
@@ -76,9 +71,15 @@ function NotasPage() {
             return;
         }
 
+        const isEditando = form.id !== null;
+        const url = isEditando
+            ? `http://localhost:8080/notas/${form.id}`
+            : `http://localhost:8080/notas?materiaId=${materiaId}&estudianteId=${estudianteId}`;
+        const method = isEditando ? 'PUT' : 'POST';
+
         try {
-            const response = await fetch(`http://localhost:8080/notas?materiaId=${materiaId}&estudianteId=${estudianteId}`, {
-                method: 'POST',
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
@@ -92,13 +93,13 @@ function NotasPage() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al agregar nota');
+                throw new Error(errorData.message || 'Error al guardar nota');
             }
 
-            setForm({ valor: 0, porcentaje: 0, observacion: '' });
+            setForm({ id: null, valor: 0, porcentaje: 0, observacion: '' });
             await fetchNotas();
         } catch (err) {
-            console.error("Error al agregar nota:", err);
+            console.error("Error al guardar nota:", err);
             setError(err.message);
         } finally {
             setLoading(prev => ({ ...prev, operacion: false }));
@@ -112,9 +113,7 @@ function NotasPage() {
                 method: 'DELETE'
             });
 
-            if (!response.ok) {
-                throw new Error('Error al eliminar nota');
-            }
+            if (!response.ok) throw new Error('Error al eliminar nota');
 
             await fetchNotas();
         } catch (err) {
@@ -126,7 +125,6 @@ function NotasPage() {
     };
 
     const promedioFinal = notas.reduce((acc, n) => acc + (n.valor * (n.porcentaje / 100)), 0).toFixed(2);
-
     const isLoading = loading.notas || loading.datos || loading.operacion;
 
     return (
@@ -165,8 +163,18 @@ function NotasPage() {
                     disabled={isLoading}
                 />
                 <button type="submit" disabled={isLoading}>
-                    {loading.operacion ? 'Procesando...' : 'Agregar Nota'}
+                    {loading.operacion ? 'Procesando...' : form.id !== null ? 'Actualizar Nota' : 'Agregar Nota'}
                 </button>
+                {form.id !== null && (
+                    <button
+                        type="button"
+                        onClick={() => setForm({ id: null, valor: 0, porcentaje: 0, observacion: '' })}
+                        disabled={isLoading}
+                        style={{ marginLeft: '10px' }}
+                    >
+                        Cancelar Edición
+                    </button>
+                )}
             </form>
 
             <h3>Lista de Notas</h3>
@@ -192,8 +200,20 @@ function NotasPage() {
                             <td>{n.observacion || '-'}</td>
                             <td>
                                 <button
+                                    onClick={() => setForm({
+                                        id: n.id,
+                                        valor: n.valor,
+                                        porcentaje: n.porcentaje,
+                                        observacion: n.observacion || ''
+                                    })}
+                                    disabled={isLoading}
+                                >
+                                    Editar
+                                </button>
+                                <button
                                     onClick={() => handleDelete(n.id)}
                                     disabled={isLoading}
+                                    style={{ marginLeft: '5px' }}
                                 >
                                     Eliminar
                                 </button>
