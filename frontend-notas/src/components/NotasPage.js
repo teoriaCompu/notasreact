@@ -55,10 +55,19 @@ function NotasPage() {
         fetchNotas();
     }, [materiaId, estudianteId]);
 
+    const calcularPorcentajeTotal = (notasActuales, notaEditada = null) => {
+        return notasActuales.reduce((total, nota) => {
+
+            if (notaEditada && nota.id === notaEditada.id) return total;
+            return total + nota.porcentaje;
+        }, 0);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(prev => ({ ...prev, operacion: true }));
 
+        // Validaciones básicas
         if (form.valor < 0 || form.valor > 5) {
             setError("La nota debe estar entre 0 y 5");
             setLoading(prev => ({ ...prev, operacion: false }));
@@ -71,13 +80,22 @@ function NotasPage() {
             return;
         }
 
-        const isEditando = form.id !== null;
-        const url = isEditando
-            ? `http://localhost:8080/notas/${form.id}`
+        // Validación de porcentaje acumulado
+        const porcentajeActual = calcularPorcentajeTotal(notas, form.id ? { id: form.id } : null);
+        const porcentajeTotal = porcentajeActual + form.porcentaje;
+
+        if (porcentajeTotal > 100) {
+            setError(`El porcentaje total no puede superar el 100% (actual: ${porcentajeActual}%)`);
+            setLoading(prev => ({ ...prev, operacion: false }));
+            return;
+        }
+
+        const url = form.id
+            ? `http://localhost:8080/notas/${form.id}?materiaId=${materiaId}&estudianteId=${estudianteId}`
             : `http://localhost:8080/notas?materiaId=${materiaId}&estudianteId=${estudianteId}`;
-        const method = isEditando ? 'PUT' : 'POST';
 
         try {
+            const method = form.id ? 'PUT' : 'POST';
             const response = await fetch(url, {
                 method,
                 headers: {
@@ -92,8 +110,8 @@ function NotasPage() {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al guardar nota');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Error al guardar nota');
             }
 
             setForm({ id: null, valor: 0, porcentaje: 0, observacion: '' });
@@ -105,6 +123,7 @@ function NotasPage() {
             setLoading(prev => ({ ...prev, operacion: false }));
         }
     };
+
 
     const handleDelete = async (id) => {
         setLoading(prev => ({ ...prev, operacion: true }));
@@ -124,7 +143,14 @@ function NotasPage() {
         }
     };
 
-    const promedioFinal = notas.reduce((acc, n) => acc + (n.valor * (n.porcentaje / 100)), 0).toFixed(2);
+    const promedioFinal = Math.min(
+        notas.reduce((acc, n) => acc + (n.valor * (n.porcentaje / 100)), 0),
+        5
+    ).toFixed(2);
+
+    // Calcula el porcentaje total acumulado
+    const porcentajeTotal = notas.reduce((acc, n) => acc + n.porcentaje, 0);
+
     const isLoading = loading.notas || loading.datos || loading.operacion;
 
     return (
@@ -230,3 +256,4 @@ function NotasPage() {
 }
 
 export default NotasPage;
+
