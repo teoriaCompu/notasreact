@@ -67,20 +67,18 @@ function NotasPage() {
         e.preventDefault();
         setLoading(prev => ({ ...prev, operacion: true }));
 
-        // Validaciones básicas
         if (form.valor < 0 || form.valor > 5) {
             setError("La nota debe estar entre 0 y 5");
             setLoading(prev => ({ ...prev, operacion: false }));
             return;
         }
 
-        if (form.porcentaje < 0 || form.porcentaje > 100) {
+        if (form.porcentaje < 0 || form.porcentaje > 101) {
             setError("El porcentaje debe estar entre 0 y 100");
             setLoading(prev => ({ ...prev, operacion: false }));
             return;
         }
 
-        // Validación de porcentaje acumulado
         const porcentajeActual = calcularPorcentajeTotal(notas, form.id ? { id: form.id } : null);
         const porcentajeTotal = porcentajeActual + form.porcentaje;
 
@@ -90,14 +88,12 @@ function NotasPage() {
             return;
         }
 
-        const url = form.id
-            ? `http://localhost:8080/notas/${form.id}?materiaId=${materiaId}&estudianteId=${estudianteId}`
-            : `http://localhost:8080/notas?materiaId=${materiaId}&estudianteId=${estudianteId}`;
+
+        const url = `http://localhost:8080/notas?materiaId=${materiaId}&estudianteId=${estudianteId}`;
 
         try {
-            const method = form.id ? 'PUT' : 'POST';
             const response = await fetch(url, {
-                method,
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
@@ -256,4 +252,6 @@ function NotasPage() {
 }
 
 export default NotasPage;
+
+
 
